@@ -1,0 +1,27 @@
+{
+  "name": "WattWise Energy Intelligence",
+  "short_name": "WattWise",
+  "description": "AI Energy Intelligence Platform for monitoring and optimizing electricity usage.",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050c1a",
+  "theme_color": "#050c1a",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/static/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "prefer_related_applications": false
+}
