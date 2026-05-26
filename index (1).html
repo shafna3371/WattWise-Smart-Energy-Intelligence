@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WattWise — Dashboard</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <meta name="theme-color" content="#050c1a">
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --navy: #050c1a;
+      --navy2: #081525;
+      --card: rgba(7, 18, 36, .93);
+      --card2: rgba(8, 20, 42, .88);
+      --border: rgba(0, 212, 255, .16);
+      --accent: #00d4ff;
+      --gold: #ffd700;
+      --danger: #ff3860;
+      --warn: #ff9800;
+      --success: #00e676;
+      --purple: #9c27b0;
+      --text: #c8e0ff;
+      --dim: #4a6890;
+      --dim2: #1a2e48;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--navy);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--navy2);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 4px;
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(0, 212, 255, .03)1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, .03)1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* ─── REALISTIC THUNDERSTORM LOADER ─────────────────────────────────────── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      overflow: hidden;
+      transition: opacity .8s ease;
+    }
+
+    #loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Sky layers */
+    #loader-sky {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, #0a1628 0%, #060e1c 45%, #020609 100%);
+    }
+
+    /* Animated cloud layers */
+    .storm-cloud {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(0px);
+    }
+
+    #clouds-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #lightning-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    #rain-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Ground glow during flash */
+    #flash-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(180, 220, 255, 0);
+      pointer-events: none;
+      transition: background 0.05s;
+    }
+
+    /* Loader text */
+    .ltxt {
+      position: absolute;
+      bottom: 12%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Orbitron', sans-serif;
+      font-size: .85rem;
+      color: rgba(0, 212, 255, 0.8);
+      letter-spacing: .35em;
+      white-space: nowrap;
+      text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+    }
+
+    .lbar {
+      position: absolute;
+      bottom: 9%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 2px;
+      background: rgba(0, 212, 255, .15);
+      border-radius: 2px;
+    }
+
+    .lbar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00d4ff, #ffd700);
+      border-radius: 2px;
+      transition: width .1s linear;
+      box-shadow: 0 0 8px #00d4ff;
+    }
+
+    /* ─── END LOADER ─────────────────────────────────────────────────────────── */
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 26px;
+      background: rgba(5, 12, 26, .94);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: .1em;
+    }
+
+    .nav-btn {
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      cursor: pointer;
+      transition: all .2s;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      text-decoration: none;
+      display: inline-block;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    .nav-btn:hover,
+    .nav-btn.active {
+      background: rgba(0, 212, 255, .1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 13px;
+      border-radius: 20px;
+      background: rgba(0, 212, 255, .07);
+      border: 1px solid var(--border);
+      font-size: .82rem;
+    }
+
+    .avatar {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .72rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .main {
+      padding: 22px 26px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    @media(max-width:600px) {
+      .navbar {
+        padding: 12px 16px;
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+
+      .main {
+        padding: 15px 12px;
+      }
+
+      .nav-logo {
+        font-size: 1.1rem;
+      }
+
+      .user-chip {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+      }
+    }
+
+    .section-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--dim);
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      margin: 26px 0 12px;
+      padding-left: 10px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 20px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .3s, box-shadow .3s;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: .35;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 36px rgba(0, 212, 255, .13);
+    }
+
+    .card.gold::before {
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .card.green::before {
+      background: linear-gradient(90deg, transparent, var(--success), transparent);
+    }
+
+    .card.purple::before {
+      background: linear-gradient(90deg, transparent, var(--purple), transparent);
+    }
+
+    .chart-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: .12em;
+      margin-bottom: 12px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    @media(max-width:1200px) {
+      .metrics-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media(max-width:600px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .dual-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .equal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .triple-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    @media(max-width:1000px) {
+
+      .dual-grid,
+      .equal-grid,
+      .triple-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media(max-width:600px) {
+      .card {
+        padding: 16px 14px;
+      }
+
+      .card-value {
+        font-size: 1.35rem;
+      }
+    }
+
+    .card-icon {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+
+    .card-label {
+      font-size: .68rem;
+      letter-spacing: .2em;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .card-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .card-value .u {
+      font-size: .85rem;
+      color: var(--dim);
+      font-weight: 400;
+    }
+
+    .card-sub {
+      font-size: .78rem;
+      color: var(--dim);
+      margin-top: 5px;
+    }
+
+    .fade-in {
+      animation: fadeUp .6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    [data-d="1"] {
+      animation-delay: .1s;
+    }
+
+    [data-d="2"] {
+      animation-delay: .2s;
+    }
+
+    [data-d="3"] {
+      animation-delay: .3s;
+    }
+
+    [data-d="4"] {
+      animation-delay: .4s;
+    }
+
+    [data-d="5"] {
+      animation-delay: .5s;
+    }
+
+    .rt-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .rt-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 11px;
+      border-radius: 20px;
+      background: rgba(0, 230, 118, .09);
+      border: 1px solid rgba(0, 230, 118, .22);
+      font-size: .72rem;
+      color: var(--success);
+      letter-spacing: .08em;
+    }
+
+    .rt-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: rdot 1.2s infinite;
+    }
+
+    @keyframes rdot {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.5);
+        box-shadow: 0 0 6px var(--success);
+      }
+    }
+
+    .rt-info {
+      font-size: .75rem;
+      color: var(--dim);
+    }
+
+    .alert-item {
+      display: flex;
+      gap: 10px;
+      padding: 11px 13px;
+      border-radius: 9px;
+      margin-bottom: 8px;
+      font-size: .84rem;
+      border-left: 3px solid;
+      line-height: 1.5;
+    }
+
+    .alert-warning {
+      background: rgba(255, 152, 0, .07);
+      border-color: var(--warn);
+    }
+
+    .alert-danger {
+      background: rgba(255, 56, 96, .07);
+      border-color: var(--danger);
+    }
+
+    .alert-budget {
+      background: rgba(255, 215, 0, .07);
+      border-color: var(--gold);
+    }
+
+    .alert-ok {
+      background: rgba(0, 230, 118, .07);
+      border-color: var(--success);
+    }
+
+    .equip-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--dim2);
+    }
+
+    .equip-row:last-child {
+      border: none;
+    }
+
+    .equip-icon {
+      font-size: 1.2rem;
+      width: 28px;
+      text-align: center;
+    }
+
+    .equip-info {
+      flex: 1;
+    }
+
+    .equip-name {
+      font-size: .88rem;
+      font-weight: 600;
+    }
+
+    .equip-sub {
+      font-size: .73rem;
+      color: var(--dim);
+      margin-top: 2px;
+    }
+
+    .equip-bar {
+      height: 3px;
+      background: var(--dim2);
+      border-radius: 2px;
+      margin-top: 4px;
+    }
+
+    .equip-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent), #7df9ff);
+      transition: width .8s;
+    }
+
+    .epct {
+      font-size: .75rem;
+      color: var(--accent);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .pred-card {
+      background: linear-gradient(135deg, rgba(0, 38, 76, .92), rgba(5, 12, 26, .96));
+      border: 1px solid rgba(0, 212, 255, .28);
+      border-radius: 15px;
+      padding: 22px;
+    }
+
+    .pred-amt {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.6rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .pred-vs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .pred-vi {
+      padding: 11px;
+      background: rgba(0, 212, 255, .06);
+      border-radius: 9px;
+      text-align: center;
+    }
+
+    .pred-vi .l {
+      font-size: .65rem;
+      color: var(--dim);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .pred-vi .v {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .92rem;
+      color: #fff;
+      margin-top: 3px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-lbl {
+      flex: 1;
+      font-size: .8rem;
+      color: var(--dim);
+    }
+
+    .stat-bar {
+      flex: 2;
+      height: 7px;
+      background: var(--dim2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .stat-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--accent), #7df9ff);
+      transition: width .8s;
+    }
+
+    .stat-val {
+      width: 68px;
+      text-align: right;
+      font-size: .8rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .peak-chips {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .peak-chip {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: .75rem;
+      background: rgba(255, 152, 0, .1);
+      border: 1px solid rgba(255, 152, 0, .28);
+      color: var(--warn);
+      font-weight: 600;
+    }
+
+    .proj-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .proj-item {
+      text-align: center;
+      padding: 14px;
+      border-radius: 10px;
+      background: rgba(0, 212, 255, .05);
+      border: 1px solid var(--border);
+    }
+
+    .proj-month {
+      font-size: .68rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .proj-amt {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .98rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 3px;
+    }
+
+    .sug {
+      padding: 10px 13px;
+      border-radius: 9px;
+      margin-bottom: 7px;
+      background: rgba(0, 212, 255, .04);
+      border: 1px solid var(--border);
+      font-size: .83rem;
+      line-height: 1.5;
+    }
+
+    .sug:hover {
+      background: rgba(0, 212, 255, .08);
+    }
+
+    .ds {
+      display: inline-block;
+      font-size: .58rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(0, 230, 118, .12);
+      border: 1px solid rgba(0, 230, 118, .2);
+      color: var(--success);
+      letter-spacing: .05em;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    .ds.calc {
+      background: rgba(255, 152, 0, .1);
+      border-color: rgba(255, 152, 0, .2);
+      color: var(--warn);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-grid"></div>
+
+  <!-- ─── REALISTIC THUNDERSTORM LOADER ──────────────────────────────────────── -->
+  <div id="loader">
+    <div id="loader-sky"></div>
+    <canvas id="clouds-canvas"></canvas>
+    <canvas id="rain-canvas"></canvas>
+    <canvas id="lightning-canvas"></canvas>
+    <div id="flash-overlay"></div>
+    <div class="ltxt">LOADING DATASET...</div>
+    <div class="lbar">
+      <div class="lbar-fill" id="lbar-fill"></div>
+    </div>
+  </div>
+
+  <nav class="navbar">
+    <div class="nav-logo">⚡ WATTWISE</div>
+    <div style="display:flex;gap:5px;">
+      <a href="/" class="nav-btn active">📊 DASHBOARD</a>
+      <a href="/profile" class="nav-btn">👤 MY PROFILE</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="user-chip">
+        <div class="avatar" id="uav">D</div><span id="uname">demo_user</span>
+      </div>
+      <a href="/login" class="nav-btn" onclick="sessionStorage.clear()">↩ LOGOUT</a>
+    </div>
+  </nav>
+  <div class="main" id="main" style="display:none">
+    <div class="section-label">⚡ REAL-TIME METRICS <span class="ds">DATASET</span></div>
+    <div class="metrics-grid">
+      <div class="card fade-in" data-d="1">
+        <div class="card-icon">⚡</div>
+        <div class="card-label">Current 15-min kWh</div>
+        <div class="card-value" id="m-load">--<span class="u"> kWh</span></div>
+        <div class="card-sub" id="m-ts">Loading...</div>
+      </div>
+      <div class="card gold fade-in" data-d="2">
+        <div class="card-icon">💰</div>
+        <div class="card-label">Cost / Hour</div>
+        <div class="card-value" id="m-cost">--<span class="u"> ₹</span></div>
+        <div class="card-sub" id="m-tariff">Tariff: --</div>
+      </div>
+      <div class="card fade-in" data-d="3">
+        <div class="card-icon">📊</div>
+        <div class="card-label">Dataset Avg (15-min)</div>
+        <div class="card-value" id="m-avg">--<span class="u"> kWh</span></div>
+        <div class="card-sub">From 70,176 intervals</div>
+      </div>
+      <div class="card green fade-in" data-d="4">
+        <div class="card-icon">📈</div>
+        <div class="card-label">Efficiency Score</div>
+        <div class="card-value" id="m-eff">--<span class="u">/100</span></div>
+        <div class="card-sub">avg÷peak from dataset</div>
+      </div>
+      <div class="card purple fade-in" data-d="5">
+        <div class="card-icon">🌱</div>
+        <div class="card-label">Carbon Footprint</div>
+        <div class="card-value" id="m-carbon">--<span class="u"> kg</span></div>
+        <div class="card-sub">Last month kWh × 0.82</div>
+      </div>
+    </div>
+    <div class="dual-grid">
+      <div class="card fade-in">
+        <div class="rt-bar">
+          <div class="rt-badge">
+            <div class="rt-dot"></div>DATASET PLAYBACK — 15-MIN INTERVALS
+          </div>
+          <div class="rt-info">Next in <strong id="rt-ctr"
+              style="color:var(--accent);font-family:'Orbitron',sans-serif">--</strong>s &nbsp;|&nbsp; Row <span
+              id="rt-row">--</span>/<span id="rt-total">--</span></div>
+        </div>
+        <div class="chart-title">📉 TOTAL kWh — 24h WINDOW LOOPING THROUGH DATASET (15-MIN INTERVALS)</div>
+        <canvas id="loadChart" height="195"></canvas>
+      </div>
+      <div class="card fade-in">
+        <div class="chart-title">⚠️ SYSTEM ALERTS <span class="ds">DATASET</span></div>
+        <div id="alerts-block">
+          <div style="color:var(--dim);font-size:.85rem">Loading...</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-label">🔌 EQUIPMENT <span class="ds">DATASET — all 18 appliances</span></div>
+    <div class="equal-grid">
+      <div class="card">
+        <div class="chart-title">🔌 PER-APPLIANCE DAILY kWh (FROM DATASET)</div>
+        <div id="equip-block" style="max-height:360px;overflow-y:auto;padding-right:4px;"></div>
+      </div>
+      <div class="pred-card">
+        <div class="chart-title">🔮 NEXT MONTH PREDICTION <span class="ds calc">ML MODEL</span></div>
+        <div class="pred-amt" id="pred-amt">₹ --</div>
+        <div id="pred-change" style="margin-top:6px;font-size:.82rem"></div>
+        <div class="pred-vs">
+          <div class="pred-vi">
+            <div class="l">Last Month <span class="ds" style="font-size:.5rem">DATASET</span></div>
+            <div class="v" id="pv-last">{{ "₹{:,.2f}".format(last_bill) if last_bill is defined else "--" }}</div>
+          </div>
+          <div class="pred-vi">
+            <div class="l">Current Month <span class="ds calc" style="font-size:.5rem; background: rgba(0,212,255,.1); color: #00d4ff;">EST.</span></div>
+            <div class="v" id="pv-current">₹ --</div>
+          </div>
+      
+          <div class="pred-vi">
+            <div class="l">Next Month</div>
+            <div class="v" id="pv-next">{{ "₹{:,.2f}".format(predicted_bill) if predicted_bill is defined else "--" }}</div>
+          </div>
+          <div class="pred-vi">
+            <div class="l">Change</div>
+            <div class="v" id="pv-pct">--</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          <div style="padding:11px;background:rgba(0,212,255,.06);border-radius:9px;text-align:center;">
+            <div style="font-size:.62rem;color:var(--dim);text-transform:uppercase">Residents</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:1.4rem;color:#fff;margin-top:3px;" id="pv-res">--
+            </div>
+          </div>
+          <div style="padding:11px;background:rgba(0,212,255,.06);border-radius:9px;text-align:center;">
+            <div style="font-size:.62rem;color:var(--dim);text-transform:uppercase">Appliances</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:1.4rem;color:#fff;margin-top:3px;" id="pv-equip">--
+            </div>
+          </div>
+          <div style="padding:11px;background:rgba(0,212,255,.06);border-radius:9px;text-align:center;">
+            <div style="font-size:.62rem;color:var(--dim);text-transform:uppercase">Last Month</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:1.4rem;color:#fff;margin-top:3px;" id="pv-kwh">--
+            </div>
+            <div style="font-size:.6rem;color:var(--dim);">kWh</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section-label">📊 MONTHLY ANALYTICS <span class="ds">DATASET</span></div>
+    <div class="equal-grid">
+      <div class="card fade-in">
+        <div class="chart-title">📅 12-MONTH BILL + kWh TREND (FROM MONTHLY.CSV)</div>
+        <canvas id="monthlyChart" height="170"></canvas>
+      </div>
+      <div class="card fade-in">
+        <div class="chart-title">📡 3-MONTH PROJECTION <span class="ds calc">CALCULATED</span></div>
+        <div class="proj-grid" id="proj-grid"></div>
+        <canvas id="projChart" height="130"></canvas>
+      </div>
+    </div>
+    <div class="section-label">📐 LOAD ANALYTICS</div>
+    <div class="triple-grid">
+      <div class="card">
+        <div class="chart-title">📊 LOAD BREAKDOWN <span class="ds">DATASET</span></div>
+        <div id="load-stats"></div>
+      </div>
+      <div class="card">
+        <div class="chart-title">⏰ PEAK HOURS <span class="ds">DATASET</span></div>
+        <div class="peak-chips" id="peak-chips"></div>
+        <div style="margin-top:18px;">
+          <div class="chart-title">📊 HOURLY AVG PROFILE (DATASET)</div>
+          <canvas id="hourlyMini" height="105"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chart-title">💡 SMART SUGGESTIONS <span class="ds">DATASET</span></div>
+        <div id="sug-block"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── USER ────────────────────────────────────────────────────────────────────
+    const user = sessionStorage.getItem('ww_user') || 'demo_user';
+    document.getElementById('uname').textContent = user;
+    document.getElementById('uav').textContent = user[0].toUpperCase();
+
+    // ─── REALISTIC THUNDERSTORM LOADER ───────────────────────────────────────────
+    (function () {
+      const W = window.innerWidth, H = window.innerHeight;
+
+      // Resize canvases
+      ['clouds-canvas', 'rain-canvas', 'lightning-canvas'].forEach(id => {
+        const c = document.getElementById(id);
+        c.width = W; c.height = H;
+      });
+
+      const cloudCtx = document.getElementById('clouds-canvas').getContext('2d');
+      const rainCtx = document.getElementById('rain-canvas').getContext('2d');
+      const ltCtx = document.getElementById('lightning-canvas').getContext('2d');
+      const flash = document.getElementById('flash-overlay');
+
+      // Audio engine removed
+
+      // ── Clouds ────────────────────────────────────────────────────────────────
+      const clouds = [];
+      for (let i = 0; i < 7; i++) {
+        clouds.push({
+          x: Math.random() * W * 1.4 - W * 0.2,
+          y: Math.random() * H * 0.45,
+          w: 220 + Math.random() * 300,
+          h: 80 + Math.random() * 120,
+          speed: 0.15 + Math.random() * 0.25,
+          alpha: 0.55 + Math.random() * 0.35,
+          dark: Math.random() > 0.4
+        });
+      }
+
+      function drawCloud(ctx, c) {
+        const grd = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.w * 0.5);
+        const base = c.dark ? '22,28,42' : '30,38,58';
+        grd.addColorStop(0, `rgba(${base},${c.alpha})`);
+        grd.addColorStop(0.5, `rgba(${base},${c.alpha * 0.7})`);
+        grd.addColorStop(1, `rgba(${base},0)`);
+        ctx.save();
+        ctx.scale(1, c.h / c.w);
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y * (c.w / c.h), c.w * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        // Bumps
+        for (let b = 0; b < 4; b++) {
+          const bx = c.x + (b - 1.5) * c.w * 0.22;
+          const by = c.y * (c.w / c.h) - c.h * 0.1 * (c.w / c.h);
+          const br = c.w * 0.18 + b % 2 * c.w * 0.08;
+          const bg = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+          bg.addColorStop(0, `rgba(${base},${c.alpha * 0.85})`);
+          bg.addColorStop(1, `rgba(${base},0)`);
+          ctx.fillStyle = bg;
+          ctx.beginPath();
+          ctx.arc(bx, by, br, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // ── Rain drops ────────────────────────────────────────────────────────────
+      const drops = [];
+      const DROP_COUNT = 280;
+      for (let i = 0; i < DROP_COUNT; i++) {
+        drops.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          len: 12 + Math.random() * 20,
+          speed: 18 + Math.random() * 14,
+          alpha: 0.18 + Math.random() * 0.35,
+          width: 0.5 + Math.random() * 0.8
+        });
+      }
+
+      // ── Lightning bolt generator ──────────────────────────────────────────────
+      function jagged(x1, y1, x2, y2, segs, spread) {
+        const pts = [{ x: x1, y: y1 }];
+        for (let i = 1; i < segs; i++) {
+          const t = i / segs;
+          const dx = x2 - x1, dy = y2 - y1, len = Math.sqrt(dx * dx + dy * dy);
+          const nx = -dy / len, ny = dx / len;
+          const jitter = (Math.random() - 0.5) * spread;
+          pts.push({ x: x1 + dx * t + nx * jitter, y: y1 + dy * t + ny * jitter });
+        }
+        pts.push({ x: x2, y: y2 });
+        return pts;
+      }
+
+      let boltData = null;
+      let boltAlpha = 0;
+      let boltFading = false;
+
+      function spawnBolt() {
+        const sx = W * 0.2 + Math.random() * W * 0.6;
+        const sy = H * 0.05 + Math.random() * H * 0.15;
+        const ex = sx + (Math.random() - 0.5) * W * 0.25;
+        const ey = H * 0.55 + Math.random() * H * 0.3;
+
+        const main = jagged(sx, sy, ex, ey, 22, 45);
+
+        // Branches
+        const branches = [];
+        for (let b = 0; b < 3 + Math.floor(Math.random() * 3); b++) {
+          const si = 4 + Math.floor(Math.random() * (main.length - 8));
+          const sp = main[si];
+          const ex2 = sp.x + (Math.random() - 0.5) * 180;
+          const ey2 = sp.y + 80 + Math.random() * 150;
+          branches.push(jagged(sp.x, sp.y, ex2, ey2, 10, 25));
+        }
+
+        boltData = { main, branches, sx, sy, ex, ey };
+        boltAlpha = 1;
+        boltFading = false;
+
+        // Flash
+        flash.style.transition = 'background 0.03s';
+        flash.style.background = 'rgba(200,230,255,0.18)';
+        setTimeout(() => { flash.style.transition = 'background 0.4s'; flash.style.background = 'rgba(200,230,255,0)'; }, 60);
+
+        // Fade bolt
+        setTimeout(() => { boltFading = true; }, 80 + Math.random() * 120);
+      }
+
+      function drawBolt(ctx, pts, alpha, lw, glow) {
+        if (!pts || pts.length < 2) return;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        if (glow) {
+          ctx.shadowBlur = glow;
+          ctx.shadowColor = 'rgba(180,220,255,0.9)';
+        }
+        ctx.strokeStyle = 'rgba(220,240,255,1)';
+        ctx.lineWidth = lw;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // ── Main animation loop ───────────────────────────────────────────────────
+      let lastTime = 0;
+      let nextBolt = 1200 + Math.random() * 800;
+      let elapsed = 0;
+      let loadPct = 0;
+      const TOTAL_DURATION = 2200; // ms before dashboard shows
+
+      function frame(ts) {
+        const dt = ts - lastTime; lastTime = ts;
+        elapsed += dt;
+
+        // Progress bar
+        loadPct = Math.min(100, (elapsed / TOTAL_DURATION) * 100);
+        document.getElementById('lbar-fill').style.width = loadPct + '%';
+
+        // ── Clouds
+        cloudCtx.clearRect(0, 0, W, H);
+        clouds.forEach(c => {
+          c.x += c.speed;
+          if (c.x - c.w > W) c.x = -c.w;
+          drawCloud(cloudCtx, c);
+        });
+
+        // ── Rain
+        rainCtx.clearRect(0, 0, W, H);
+        drops.forEach(d => {
+          d.y += d.speed;
+          d.x += d.speed * 0.18; // slight angle
+          if (d.y > H) { d.y = -d.len; d.x = Math.random() * W; }
+          rainCtx.save();
+          rainCtx.globalAlpha = d.alpha;
+          rainCtx.strokeStyle = 'rgba(160,210,255,0.7)';
+          rainCtx.lineWidth = d.width;
+          rainCtx.beginPath();
+          rainCtx.moveTo(d.x, d.y);
+          rainCtx.lineTo(d.x + d.speed * 0.18, d.y + d.len);
+          rainCtx.stroke();
+          rainCtx.restore();
+        });
+
+        // ── Lightning
+        ltCtx.clearRect(0, 0, W, H);
+        nextBolt -= dt;
+        if (nextBolt <= 0) {
+          spawnBolt();
+          nextBolt = 1400 + Math.random() * 1200;
+        }
+
+        if (boltData) {
+          if (boltFading) boltAlpha = Math.max(0, boltAlpha - 0.045);
+          if (boltAlpha > 0) {
+            // Outer glow pass
+            drawBolt(ltCtx, boltData.main, boltAlpha * 0.35, 14, 40);
+            // Mid
+            drawBolt(ltCtx, boltData.main, boltAlpha * 0.6, 5, 20);
+            // Core bright
+            drawBolt(ltCtx, boltData.main, boltAlpha, 1.5, 0);
+            // Branches
+            boltData.branches.forEach(b => {
+              drawBolt(ltCtx, b, boltAlpha * 0.5, 8, 20);
+              drawBolt(ltCtx, b, boltAlpha * 0.7, 2.5, 0);
+              drawBolt(ltCtx, b, boltAlpha * 0.85, 0.8, 0);
+            });
+            // Ground glow impact
+            if (boltAlpha > 0.4) {
+              const grd = ltCtx.createRadialGradient(boltData.ex, boltData.ey, 0, boltData.ex, boltData.ey, 90);
+              grd.addColorStop(0, `rgba(180,220,255,${boltAlpha * 0.25})`);
+              grd.addColorStop(1, 'rgba(180,220,255,0)');
+              ltCtx.fillStyle = grd;
+              ltCtx.beginPath();
+              ltCtx.arc(boltData.ex, boltData.ey, 90, 0, Math.PI * 2);
+              ltCtx.fill();
+            }
+          } else {
+            boltData = null;
+          }
+        }
+
+        if (elapsed < TOTAL_DURATION + 300) {
+          requestAnimationFrame(frame);
+        }
+      }
+
+      // Start on first interaction OR auto-start after brief delay
+      function startStorm() {
+        lastTime = performance.now();
+        requestAnimationFrame(frame);
+      }
+
+      // Auto-start (no interaction needed for visual, audio needs gesture)
+      startStorm();
+
+      // Also start audio on first tap/click
+      document.addEventListener('pointerdown', () => {
+        if (false) { // Audio context removed
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        // Force the audio context to wake up
+        if (false) { // Audio context removed
+          audioCtx.resume();
+        }
+        if (false) { // Audio context removed
+          rainRef = playRainAmbience();
+        }
+      }, { once: true });
+
+      // Hide loader and show dashboard
+      function hideLoader() {
+        const loader = document.getElementById('loader');
+        if (!loader) return;
+
+        // If not already hidden, trigger the animation
+        if (!loader.classList.contains('hidden')) {
+          loader.classList.add('hidden');
+        }
+
+        // Always ensure the main dashboard is shown after the animation time
+        setTimeout(() => {
+          loader.style.display = 'none';
+          document.getElementById('main').style.display = 'block';
+        }, 850);
+      }
+
+      // Initialize dashboard as soon as possible
+      initDashboard();
+
+      // Error handler for better debugging in production
+      window.onerror = function (msg, url, lineNo, columnNo, error) {
+        console.error('WattWise Error:', msg, 'at', lineNo + ':' + columnNo);
+        const alerts = document.getElementById('alerts-block');
+        if (alerts) {
+          alerts.innerHTML = `<div class="alert-item alert-danger">
+            <strong>⚠️ System Error</strong><br>
+            <small>${msg}<br>Line: ${lineNo}</small>
+          </div>`;
+        }
+        // Force hide loader if error occurs
+        setTimeout(hideLoader, 500);
+        return false;
+      };
+
+      // Auto-hide loader after a reasonable time OR when data is ready
+      setTimeout(hideLoader, 3500);
+    })();
+
+    // ─── Dashboard Logic ─────────────────────────────────────────────────────────
+    let dashData = null, loadChart = null, monthlyChart = null, projChart = null, hourlyMini = null;
+    let countdown = 30, cdInterval = null;
+    const TOD_TOTAL = {{ tod_rows or 70176 }};
+
+    function initDashboard() {
+      console.log('[WattWise] Initializing Dashboard...');
+      fetch('/api/dashboard')
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+          return r.json();
+        })
+        .then(d => {
+          if (d.error) throw new Error(d.msg || d.error);
+          console.log('[WattWise] Dashboard data received');
+          dashData = d;
+          populateStatic(d);
+          fetchWindow(0);
+          // Hide loader properly
+          hideLoader();
+        })
+        .catch(e => {
+          console.error('[WattWise] Init Failed:', e);
+          const alerts = document.getElementById('alerts-block');
+          if (alerts) {
+            alerts.innerHTML = `<div class="alert-item alert-danger">
+              <strong>⚠️ Connection Error</strong><br>
+              ${e.message || 'Backend unreachable'}<br>
+              <small>Check server logs or /api/status</small>
+            </div>`;
+          }
+          // Still show the dashboard so the user can see the error
+          setTimeout(() => {
+            const loader = document.getElementById('loader');
+            if (loader) loader.classList.add('hidden');
+            document.getElementById('main').style.display = 'block';
+          }, 1000);
+        });
+    }
+
+    function fetchWindow(idx) {
+      fetch('/api/tod_window/' + idx).then(r => r.json()).then(w => {
+        updateLive(w);
+        updateChart(w.values, w.timestamps, w.current_value);
+        startCD(w.next_idx);
+      });
+    }
+
+    function startCD(nextIdx) {
+      clearInterval(cdInterval);
+      countdown = 30;
+      document.getElementById('rt-ctr').textContent = countdown;
+      cdInterval = setInterval(() => {
+        countdown--;
+        document.getElementById('rt-ctr').textContent = countdown;
+        if (countdown <= 0) { clearInterval(cdInterval); fetchWindow(nextIdx); }
+      }, 1000);
+    }
+
+    function updateLive(w) {
+      sv('m-load', w.current_value.toFixed(4) + '<span class="u"> kWh</span>');
+      sv('m-ts', '📍 ' + w.current_ts);
+      if (dashData) sv('m-cost', '₹' + (w.current_value * 4 * dashData.tariff_rate).toFixed(2) + '<span class="u">/hr</span>');
+      sv('rt-row', (w.start_idx + 1).toLocaleString());
+      sv('rt-total', w.total.toLocaleString());
+    }
+
+    function updateChart(values, timestamps, cur) {
+      const avg = dashData ? dashData.average_kwh : 0;
+      const peakIdx = values.indexOf(Math.max(...values));
+      const ptColors = values.map((_, i) => i === peakIdx ? '#ffd700' : 'rgba(0,212,255,.5)');
+      const ptRadius = values.map((_, i) => i === peakIdx ? 8 : 1.5);
+      if (!loadChart) {
+        const ctx = document.getElementById('loadChart').getContext('2d');
+        loadChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: timestamps,
+            datasets: [
+              { label: 'kWh (Dataset)', data: values, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.07)', borderWidth: 2, fill: true, tension: 0.35, pointBackgroundColor: ptColors, pointRadius: ptRadius, pointBorderColor: 'transparent' },
+              { label: 'Dataset Avg', data: values.map(() => avg), borderColor: 'rgba(255,215,0,.45)', borderWidth: 1.5, borderDash: [6, 4], fill: false, pointRadius: 0 }
+            ]
+          },
+          options: {
+            responsive: true, animation: { duration: 350 },
+            plugins: {
+              legend: { display: false }, tooltip: {
+                backgroundColor: 'rgba(5,12,26,.95)', borderColor: 'rgba(0,212,255,.3)', borderWidth: 1,
+                callbacks: {
+                  title: i => '📅 ' + i[0].label, label: i => i.datasetIndex === 0 ? ' kWh: ' + i.raw.toFixed(4) : ' Avg: ' + i.raw.toFixed(4),
+                  afterBody: i => { if (i[0].dataIndex === peakIdx) return ['⚡ PEAK in window']; return []; }
+                }
+              }
+            },
+            scales: {
+              x: { ticks: { color: '#4a6890', font: { size: 8 }, maxTicksLimit: 10, maxRotation: 0 }, grid: { color: 'rgba(0,212,255,.04)' } },
+              y: { ticks: { color: '#4a6890', callback: v => v.toFixed(3) }, grid: { color: 'rgba(0,212,255,.06)' } }
+            }
+          }
+        });
+      } else {
+        loadChart.data.labels = timestamps;
+        loadChart.data.datasets[0].data = values;
+        loadChart.data.datasets[0].pointBackgroundColor = ptColors;
+        loadChart.data.datasets[0].pointRadius = ptRadius;
+        loadChart.data.datasets[1].data = values.map(() => avg);
+        loadChart.update();
+      }
+    }
+
+    function populateStatic(d) {
+      sv('m-tariff', 'Tariff: ₹' + d.tariff_rate + '/kWh');
+      sv('m-avg', d.average_kwh.toFixed(4) + '<span class="u"> kWh</span>');
+      sv('m-eff', d.efficiency_score + '<span class="u">/100</span>');
+      sv('m-carbon', d.carbon_footprint_kg + '<span class="u"> kg CO₂</span>');
+      document.getElementById('alerts-block').innerHTML = d.alerts.map(a => `<div class="alert-item alert-${a.type}">${a.msg}</div>`).join('');
+      const mxK = Math.max(...d.equipment.map(e => e.daily_kwh));
+      document.getElementById('equip-block').innerHTML = d.equipment.map(e => `<div class="equip-row"><div class="equip-icon">${e.icon}</div><div class="equip-info"><div class="equip-name">${e.name}</div><div class="equip-sub">${e.daily_kwh.toFixed(4)} kWh/day &middot; &#8377;${e.cost_per_day}/day &middot; ${e.monthly_kwh.toFixed(3)} kWh/month</div><div class="equip-bar"><div class="equip-bar-fill" style="width:${(e.daily_kwh / mxK * 100).toFixed(0)}%"></div></div></div><div class="epct">${e.pct_of_total}%</div></div>`).join('');
+      sv('pred-amt', '&#8377;' + d.predicted_bill.toLocaleString());
+      const pc = d.pct_change;
+      sv('pred-change', pc > 0 ? `<span style="color:var(--danger)">&#9650; ${pc}% higher than last month</span>` : `<span style="color:var(--success)">&#9660; ${Math.abs(pc)}% lower than last month</span>`);
+      sv('pv-last', '&#8377;' + d.last_month_bill.toLocaleString());
+      sv('pv-current', '₹' + d.predicted_bill.toLocaleString());
+      sv('pv-next', '₹' + d.next_month_predicted.toLocaleString());
+      sv('pv-pct', pc > 0 ? `<span style="color:var(--danger)">+${pc}%</span>` : `<span style="color:var(--success)">${pc}%</span>`);
+      sv('pv-res', d.residents);
+      sv('pv-equip', d.total_equipments);
+      sv('pv-kwh', d.last_month_kwh.toFixed(1));
+      const mCtx = document.getElementById('monthlyChart').getContext('2d');
+      
+      // Destroy old instance if it exists to avoid hover glitches
+      if (window.monthlyChart && typeof window.monthlyChart.destroy === 'function') {
+          window.monthlyChart.destroy();
+      }
+
+      window.monthlyChart = new Chart(mCtx, { 
+          type: 'line', 
+          data: { 
+              labels: d.monthly_trend.map(m => m.month), 
+              datasets: [
+                  { 
+                      label: 'Bill (₹)', 
+                      data: d.seasonal_trend.map(m => m.bill), 
+                      borderColor: '#ffd700', 
+                      backgroundColor: 'rgba(255,215,0,.07)', 
+                      borderWidth: 2.5, 
+                      fill: true, 
+                      tension: 0.4, 
+                      pointBackgroundColor: '#ffd700', 
+                      pointRadius: 5,
+                      yAxisID: 'y' // 💡 explicitly locked to Left Axis
+                  }, 
+                  { 
+                      label: 'kWh', 
+                      data: d.seasonal_trend.map(m => m.kwh), 
+                      borderColor: 'rgba(0,212,255,.6)', 
+                      fill: false, 
+                      tension: 0.4, 
+                      pointRadius: 3, 
+                      yAxisID: 'y2' // 💡 explicitly locked to Right Axis
+                  }
+              ] 
+          }, 
+          options: { 
+              responsive: true, 
+              plugins: { 
+                  legend: { 
+                      position: 'top', 
+                      labels: { color: '#4a6890', font: { size: 10 } } 
+                  } 
+              }, 
+              scales: { 
+                  x: { 
+                      ticks: { 
+                          color: '#4a6890', 
+                          font: { size: 9 },
+                          maxTicksLimit: 12, // Keeps text clean across multi-year data
+                          maxRotation: 45
+                      }, 
+                      grid: { color: 'rgba(255,215,0,.04)' } 
+                  }, 
+                  y: { 
+                      type: 'linear',
+                      position: 'left',
+                      ticks: { color: '#ffd700', font: { size: 9 } }, 
+                      grid: { color: 'rgba(255,215,0,.05)' },
+                      title: { display: true, text: 'Bill Amount (₹)', color: '#ffd700', font: { size: 10 } }
+                  }, 
+                  y2: { 
+                      type: 'linear',
+                      position: 'right', 
+                      ticks: { color: '#00d4ff', font: { size: 9 } }, 
+                      grid: { display: false }, // Avoid cross-crossing gridlines
+                      title: { display: true, text: 'Energy Used (kWh)', color: '#00d4ff', font: { size: 10 } }
+                  } 
+              } 
+          } 
+      });
+      const pL = ['Month +1', 'Month +2', 'Month +3'];
+      document.getElementById('proj-grid').innerHTML = d.three_month_projection.map((p, i) => `<div class="proj-item"><div class="proj-month">${pL[i]}</div><div class="proj-amt">&#8377;${p.toLocaleString()}</div></div>`).join('');
+      const pCtx = document.getElementById('projChart').getContext('2d');
+      projChart = new Chart(pCtx, { type: 'bar', data: { labels: pL, datasets: [{ data: d.three_month_projection, backgroundColor: ['rgba(0,212,255,.3)', 'rgba(0,212,255,.5)', 'rgba(0,212,255,.7)'], borderColor: '#00d4ff', borderWidth: 1, borderRadius: 8 }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#4a6890' }, grid: { color: 'rgba(0,212,255,.04)' } }, y: { ticks: { color: '#4a6890' }, grid: { color: 'rgba(0,212,255,.05)' } } } } });
+      const stats = [{ l: 'Average kWh', v: d.average_kwh.toFixed(4), p: d.average_kwh / d.peak_kwh * 100 }, { l: 'Peak kWh', v: d.peak_kwh.toFixed(4), p: 100 }, { l: 'Base kWh', v: d.base_kwh.toFixed(4), p: d.base_kwh / d.peak_kwh * 100 }, { l: 'Std Deviation', v: d.load_std.toFixed(4), p: d.load_std / d.peak_kwh * 60 }];
+      document.getElementById('load-stats').innerHTML = stats.map(s => `<div class="stat-row"><div class="stat-lbl">${s.l}</div><div class="stat-bar"><div class="stat-fill" style="width:${Math.min(100, s.p).toFixed(0)}%"></div></div><div class="stat-val">${s.v}</div></div>`).join('');
+      document.getElementById('peak-chips').innerHTML = d.peak_hours.map(h => `<div class="peak-chip">&#9889; ${h}:00</div>`).join('');
+      const hrs = Object.keys(d.hourly_avg).map(Number).sort((a, b) => a - b);
+      const hVs = hrs.map(h => d.hourly_avg[h]);
+      const hmCtx = document.getElementById('hourlyMini').getContext('2d');
+      hourlyMini = new Chart(hmCtx, { type: 'bar', data: { labels: hrs.map(h => h + 'h'), datasets: [{ data: hVs, backgroundColor: hVs.map(v => v > d.average_kwh * 1.2 ? 'rgba(255,56,96,.5)' : v > d.average_kwh ? 'rgba(255,152,0,.4)' : 'rgba(0,212,255,.3)'), borderRadius: 3, borderWidth: 0 }] }, options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => i.raw.toFixed(4) + ' kWh' } } }, scales: { x: { ticks: { color: '#4a6890', font: { size: 8 }, maxTicksLimit: 8 }, grid: { display: false } }, y: { ticks: { color: '#4a6890', font: { size: 8 } }, grid: { color: 'rgba(0,212,255,.04)' } } } } });
+      const top3 = d.equipment.slice(0, 3);
+      const sugs = [`&#129310; ${top3[0].name}: ${top3[0].daily_kwh.toFixed(4)} kWh/day is the highest single appliance load.`, `&#127859; ${top3[1].name}: ${top3[1].daily_kwh.toFixed(4)} kWh/day &#8212; ${top3[1].monthly_kwh.toFixed(3)} kWh this month.`, `&#128202; Dataset peak at ${d.peak_hours[0]}:00. Shifting heavy appliances saves ~6% bill.`, `&#128106; ${d.residents} residents, ${d.total_equipments} appliances tracked across 70,176 intervals.`, `&#128161; Efficiency: ${d.efficiency_score}/100 based on avg/peak ratio from your actual dataset.`];
+      document.getElementById('sug-block').innerHTML = sugs.map(s => `<div class="sug">${s}</div>`).join('');
+    }
+    function sv(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+
+    // Register PWA Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('WattWise SW Registered:', reg.scope))
+          .catch(err => console.error('PWA Registration Failed:', err));
+      });
+    }
+  </script>
+</body>
+
+</html>

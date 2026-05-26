@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WattWise — My Profile</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <meta name="theme-color" content="#050c1a">
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --navy: #050c1a;
+      --navy2: #081525;
+      --card: rgba(7, 18, 36, .93);
+      --border: rgba(0, 212, 255, .16);
+      --accent: #00d4ff;
+      --gold: #ffd700;
+      --danger: #ff3860;
+      --warn: #ff9800;
+      --success: #00e676;
+      --purple: #9c27b0;
+      --text: #c8e0ff;
+      --dim: #4a6890;
+      --dim2: #1a2e48;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--navy);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--navy2);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 4px;
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(0, 212, 255, .03)1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, .03)1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--navy);
+      overflow: hidden;
+      transition: opacity .7s;
+    }
+
+    #loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #lsvg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .ltxt {
+      position: absolute;
+      bottom: 18%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Orbitron', sans-serif;
+      font-size: .88rem;
+      color: var(--accent);
+      letter-spacing: .35em;
+      white-space: nowrap;
+      animation: ltb 1.8s infinite;
+    }
+
+    @keyframes ltb {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .15;
+      }
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 26px;
+      background: rgba(5, 12, 26, .94);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: .1em;
+    }
+
+    .nav-btn {
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      cursor: pointer;
+      transition: all .2s;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      text-decoration: none;
+      display: inline-block;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    .nav-btn:hover,
+    .nav-btn.active {
+      background: rgba(0, 212, 255, .1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 13px;
+      border-radius: 20px;
+      background: rgba(0, 212, 255, .07);
+      border: 1px solid var(--border);
+      font-size: .82rem;
+    }
+
+    .avatar {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .72rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .main {
+      padding: 22px 26px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    @media(max-width:600px) {
+      .navbar {
+        padding: 12px 16px;
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+
+      .main {
+        padding: 15px 12px;
+      }
+
+      .nav-logo {
+        font-size: 1.1rem;
+      }
+
+      .user-chip {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+      }
+    }
+
+    .section-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--dim);
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      margin: 26px 0 12px;
+      padding-left: 10px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 20px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .3s, box-shadow .3s;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: .35;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 36px rgba(0, 212, 255, .12);
+    }
+
+    .chart-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: .12em;
+      margin-bottom: 12px;
+    }
+
+    .dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .triple-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    @media(max-width:1000px) {
+
+      .dual-grid,
+      .triple-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media(max-width:600px) {
+      .card {
+        padding: 16px 14px;
+      }
+    }
+
+    .fade-in {
+      animation: fadeUp .6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    [data-d="1"] {
+      animation-delay: .1s;
+    }
+
+    [data-d="2"] {
+      animation-delay: .2s;
+    }
+
+    [data-d="3"] {
+      animation-delay: .3s;
+    }
+
+    .ds {
+      display: inline-block;
+      font-size: .58rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(0, 230, 118, .12);
+      border: 1px solid rgba(0, 230, 118, .2);
+      color: var(--success);
+      letter-spacing: .05em;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    .ds.calc {
+      background: rgba(255, 152, 0, .1);
+      border-color: rgba(255, 152, 0, .2);
+      color: var(--warn);
+    }
+
+    /* Hero */
+    .prof-hero {
+      background: linear-gradient(135deg, rgba(8, 22, 42, .96), rgba(5, 12, 26, .98));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 32px;
+      display: flex;
+      gap: 36px;
+      align-items: center;
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .prof-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 20% 50%, rgba(0, 80, 180, .07), transparent 60%);
+      pointer-events: none;
+    }
+
+    .prof-avatar {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      border: 3px solid;
+      flex-shrink: 0;
+      animation: avGlow 3s ease-in-out infinite alternate;
+    }
+
+    @media(max-width:700px) {
+      .prof-hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 24px 20px;
+        gap: 24px;
+      }
+
+      .prof-avatar {
+        width: 90px;
+        height: 90px;
+        font-size: 2.5rem;
+      }
+
+      .prof-name {
+        font-size: 1.4rem;
+      }
+
+      .prof-meta {
+        justify-content: center;
+      }
+    }
+
+    @keyframes avGlow {
+      from {
+        box-shadow: 0 0 18px currentColor;
+      }
+
+      to {
+        box-shadow: 0 0 46px currentColor, 0 0 80px currentColor;
+      }
+    }
+
+    .prof-badge {
+      margin-top: 9px;
+      padding: 4px 13px;
+      border-radius: 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: .62rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      display: inline-block;
+    }
+
+    .prof-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.65rem;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .prof-type {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      margin-bottom: 9px;
+    }
+
+    .prof-desc {
+      font-size: .88rem;
+      color: var(--dim);
+      line-height: 1.6;
+      max-width: 480px;
+    }
+
+    .prof-meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      padding: 9px 14px;
+      border-radius: 9px;
+      background: rgba(0, 212, 255, .06);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .meta-l {
+      font-size: .62rem;
+      color: var(--dim);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .meta-v {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .9rem;
+      color: #fff;
+      margin-top: 3px;
+    }
+
+    /* Time bars */
+    .tbar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .tbar-icon {
+      font-size: 1.2rem;
+      width: 28px;
+      text-align: center;
+    }
+
+    .tbar-info {
+      flex: 1;
+    }
+
+    .tbar-label {
+      font-size: .8rem;
+      color: var(--dim);
+      margin-bottom: 4px;
+    }
+
+    .tbar-track {
+      height: 10px;
+      background: var(--dim2);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .tbar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 1s ease;
+    }
+
+    .tbar-val {
+      width: 52px;
+      text-align: right;
+      font-size: .85rem;
+      font-weight: 600;
+    }
+
+    .tbar-kw {
+      font-size: .72rem;
+      color: var(--dim);
+      margin-top: 2px;
+    }
+
+    /* Weekday vs Weekend */
+    .ww-cards {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .ww-card {
+      flex: 1;
+      text-align: center;
+      padding: 14px;
+      border-radius: 10px;
+      background: rgba(0, 212, 255, .05);
+      border: 1px solid var(--border);
+    }
+
+    .ww-label {
+      font-size: .65rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .ww-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 4px;
+    }
+
+    /* Bench */
+    .bench {
+      display: flex;
+      gap: 22px;
+      justify-content: center;
+      align-items: flex-end;
+      margin-top: 12px;
+    }
+
+    .bench-col {
+      flex: 1;
+      text-align: center;
+    }
+
+    .bench-track {
+      height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .bench-bar {
+      width: 80%;
+      margin: 0 auto;
+      border-radius: 8px 8px 0 0;
+      border: 1px solid;
+      transition: height .9s ease;
+    }
+
+    .bench-bar.you {
+      background: rgba(0, 212, 255, .28);
+      border-color: var(--accent);
+    }
+
+    .bench-bar.peer {
+      background: rgba(255, 152, 0, .22);
+      border-color: var(--warn);
+    }
+
+    .bench-lbl {
+      margin-top: 6px;
+      font-size: .78rem;
+      color: var(--dim);
+    }
+
+    .bench-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .88rem;
+      color: #fff;
+      margin-top: 3px;
+    }
+
+    /* Goals */
+    .goal-row {
+      margin-bottom: 15px;
+    }
+
+    .goal-hdr {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .goal-lbl {
+      font-size: .83rem;
+    }
+
+    .goal-vals {
+      font-size: .75rem;
+      color: var(--dim);
+    }
+
+    .goal-track {
+      height: 10px;
+      background: var(--dim2);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .goal-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 1s .15s ease;
+    }
+
+    /* Streaks */
+    .streak-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .streak-card {
+      text-align: center;
+      padding: 18px 10px;
+      border-radius: 12px;
+      background: rgba(0, 212, 255, .04);
+      border: 1px solid var(--border);
+      transition: all .3s;
+    }
+
+    .streak-card:hover {
+      background: rgba(0, 212, 255, .09);
+      transform: translateY(-3px);
+    }
+
+    .streak-icon {
+      font-size: 1.9rem;
+      margin-bottom: 5px;
+    }
+
+    .streak-count {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .streak-label {
+      font-size: .7rem;
+      color: var(--dim);
+      margin-top: 3px;
+    }
+
+    /* Most used */
+    .mu-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--dim2);
+    }
+
+    .mu-row:last-child {
+      border: none;
+    }
+
+    .mu-rank {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: .7rem;
+      font-weight: 700;
+      background: rgba(0, 212, 255, .1);
+      color: var(--accent);
+      border: 1px solid var(--border);
+    }
+
+    .mu-info {
+      flex: 1;
+    }
+
+    .mu-name {
+      font-size: .88rem;
+      font-weight: 600;
+    }
+
+    .mu-sub {
+      font-size: .72rem;
+      color: var(--dim);
+      margin-top: 2px;
+    }
+
+    .mu-bar {
+      height: 4px;
+      background: var(--dim2);
+      border-radius: 3px;
+      margin-top: 5px;
+    }
+
+    .mu-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .9s;
+    }
+
+    .sug {
+      padding: 10px 13px;
+      border-radius: 9px;
+      margin-bottom: 7px;
+      background: rgba(0, 212, 255, .04);
+      border: 1px solid var(--border);
+      font-size: .83rem;
+      line-height: 1.5;
+    }
+
+    .sug:hover {
+      background: rgba(0, 212, 255, .08);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-grid"></div>
+  <div id="loader">
+    <svg id="lsvg" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="ltxt">Building Profile from Dataset...</div>
+  </div>
+  <nav class="navbar">
+    <div class="nav-logo">⚡ WATTWISE</div>
+    <div style="display:flex;gap:5px;">
+      <a href="/" class="nav-btn">📊 DASHBOARD</a>
+      <a href="/profile" class="nav-btn active">👤 MY PROFILE</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="user-chip">
+        <div class="avatar" id="uav">D</div><span id="uname">demo_user</span>
+      </div>
+      <a href="/login" class="nav-btn" onclick="sessionStorage.clear()">↩ LOGOUT</a>
+    </div>
+  </nav>
+  <div class="main" id="main" style="display:none">
+    <!-- Hero -->
+    <div class="prof-hero fade-in" id="phero">
+      <div style="text-align:center;flex-shrink:0;">
+        <div class="prof-avatar" id="pav">🕵️</div>
+        <div class="prof-badge" id="pbadge">LOADING</div>
+      </div>
+      <div>
+        <div class="prof-name" id="pname">--</div>
+        <div class="prof-type" id="ptype">Analyzing dataset...</div>
+        <div class="prof-desc" id="pdesc">Loading profile from 70,176 data points...</div>
+        <div class="prof-meta">
+          <div class="meta-item">
+            <div class="meta-l">Consistency <span class="ds">DATASET</span></div>
+            <div class="meta-v" id="pm-cons">--</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-l">Off-Peak % <span class="ds">DATASET</span></div>
+            <div class="meta-v" id="pm-op">--</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-l">Bill Trend <span class="ds">DATASET</span></div>
+            <div class="meta-v" id="pm-trend">--</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-l">vs Peers <span class="ds calc">SIM</span></div>
+            <div class="meta-v" id="pm-peer">--</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-l">Residents <span class="ds">DATASET</span></div>
+            <div class="meta-v" id="pm-res">--</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-l">Appliances <span class="ds">DATASET</span></div>
+            <div class="meta-v" id="pm-equip">--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">📊 USAGE DISTRIBUTION <span class="ds">FROM 15MIN_TOD.CSV</span></div>
+    <div class="dual-grid">
+      <div class="card fade-in" data-d="1">
+        <div class="chart-title">⏰ TIME-OF-DAY DISTRIBUTION (DATASET AVERAGES)</div>
+        <div class="tbar-row">
+          <div class="tbar-icon">🌙</div>
+          <div class="tbar-info">
+            <div class="tbar-label">Night (00:00–06:00)</div>
+            <div class="tbar-track">
+              <div class="tbar-fill" id="tf-n" style="width:0%;background:#9c27b0"></div>
+            </div>
+            <div class="tbar-kw" id="tk-n">-- kWh avg</div>
+          </div>
+          <div class="tbar-val" id="tv-n">--%</div>
+        </div>
+        <div class="tbar-row">
+          <div class="tbar-icon">🌅</div>
+          <div class="tbar-info">
+            <div class="tbar-label">Morning (06:00–12:00)</div>
+            <div class="tbar-track">
+              <div class="tbar-fill" id="tf-m" style="width:0%;background:#ffd700"></div>
+            </div>
+            <div class="tbar-kw" id="tk-m">-- kWh avg</div>
+          </div>
+          <div class="tbar-val" id="tv-m">--%</div>
+        </div>
+        <div class="tbar-row">
+          <div class="tbar-icon">☀️</div>
+          <div class="tbar-info">
+            <div class="tbar-label">Afternoon (12:00–18:00)</div>
+            <div class="tbar-track">
+              <div class="tbar-fill" id="tf-a" style="width:0%;background:#ff9800"></div>
+            </div>
+            <div class="tbar-kw" id="tk-a">-- kWh avg</div>
+          </div>
+          <div class="tbar-val" id="tv-a">--%</div>
+        </div>
+        <div class="tbar-row">
+          <div class="tbar-icon">🌆</div>
+          <div class="tbar-info">
+            <div class="tbar-label">Evening (18:00–24:00)</div>
+            <div class="tbar-track">
+              <div class="tbar-fill" id="tf-e" style="width:0%;background:#ff3860"></div>
+            </div>
+            <div class="tbar-kw" id="tk-e">-- kWh avg</div>
+          </div>
+          <div class="tbar-val" id="tv-e">--%</div>
+        </div>
+      </div>
+      <div class="card fade-in" data-d="2">
+        <div class="chart-title">🍩 USAGE FINGERPRINT (DATASET)</div>
+        <canvas id="donutChart" height="230"></canvas>
+      </div>
+    </div>
+
+    <div class="section-label">📅 BEHAVIORAL PATTERNS <span class="ds">FROM DATASET</span></div>
+    <div class="dual-grid">
+      <div class="card fade-in" data-d="1">
+        <div class="chart-title">📅 WEEKDAY VS WEEKEND (DATASET)</div>
+        <div class="ww-cards">
+          <div class="ww-card">
+            <div class="ww-label">Weekday Avg</div>
+            <div class="ww-val" id="ww-wd">-- kWh</div>
+            <div style="font-size:.74rem;margin-top:4px;" id="ww-wd-d"></div>
+          </div>
+          <div class="ww-card">
+            <div class="ww-label">Weekend Avg</div>
+            <div class="ww-val" id="ww-we">-- kWh</div>
+            <div style="font-size:.74px;margin-top:4px;" id="ww-we-d"></div>
+          </div>
+        </div>
+        <canvas id="wwChart" height="135" style="margin-top:14px"></canvas>
+      </div>
+      <div class="card fade-in" data-d="2">
+        <div class="chart-title">📡 24-HOUR USAGE SIGNATURE (DATASET)</div>
+        <canvas id="hourlyChart" height="210"></canvas>
+      </div>
+    </div>
+
+    <div class="section-label">👥 PEER BENCHMARK & GOALS</div>
+    <div class="dual-grid">
+      <div class="card fade-in" data-d="1">
+        <div class="chart-title">👥 YOU VS PEERS <span class="ds calc">PEER = SIMULATED</span></div>
+        <div class="bench">
+          <div class="bench-col">
+            <div class="bench-track">
+              <div class="bench-bar you" id="you-bar" style="height:50%"></div>
+            </div>
+            <div class="bench-lbl">You (Dataset)</div>
+            <div class="bench-val" id="you-val">--</div>
+          </div>
+          <div class="bench-col">
+            <div class="bench-track">
+              <div class="bench-bar peer" id="peer-bar" style="height:50%"></div>
+            </div>
+            <div class="bench-lbl">Neighborhood Avg</div>
+            <div class="bench-val" id="peer-val">--</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;text-align:center;font-size:.82rem;" id="bench-note"></div>
+      </div>
+      <div class="card fade-in" data-d="2">
+        <div class="chart-title">🎯 GOALS & PROGRESS <span class="ds">DATASET-DERIVED</span></div>
+        <div id="goals-block"></div>
+      </div>
+    </div>
+
+    <div class="section-label">🏆 STREAKS & TOP APPLIANCES <span class="ds">DATASET</span></div>
+    <div class="dual-grid">
+      <div class="card fade-in">
+        <div class="chart-title">🔥 HABIT STREAKS (COMPUTED FROM DATASET)</div>
+        <div class="streak-grid" id="streak-grid"></div>
+      </div>
+      <div class="card fade-in">
+        <div class="chart-title">🔌 TOP ENERGY CONSUMERS (DATASET kWh/day)</div>
+        <div id="mu-block"></div>
+      </div>
+    </div>
+
+    <div class="section-label">💡 SUGGESTIONS & SEASONAL</div>
+    <div class="dual-grid">
+      <div class="card fade-in">
+        <div class="chart-title">💡 PERSONALIZED SUGGESTIONS <span class="ds">DATASET</span></div>
+        <div id="sug-block"></div>
+      </div>
+      <div class="card fade-in">
+        <div class="chart-title">📊 SEASONAL TREND — MONTHLY kWh <span class="ds">MONTHLY1.CSV</span></div><canvas
+          id="seasonChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+  <script>
+    const user = sessionStorage.getItem('ww_user') || 'demo_user';
+    document.getElementById('uname').textContent = user;
+
+    // Register PWA Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('WattWise SW Registered (Profile):', reg.scope))
+          .catch(err => console.error('PWA Registration Failed:', err));
+      });
+    }
+    document.getElementById('uav').textContent = user[0].toUpperCase();
+
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const lsvg = document.getElementById('lsvg');
+    function addLD() { const d = document.createElementNS(SVG_NS, 'defs'); d.innerHTML = `<filter id="lg"><feGaussianBlur stdDeviation="4" result="b1"/><feGaussianBlur stdDeviation="14" result="b2"/><feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge></filter><linearGradient id="bgr" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff"/><stop offset="30%" stop-color="#a0e8ff"/><stop offset="70%" stop-color="#00d4ff"/><stop offset="100%" stop-color="#ffd700"/></linearGradient>`; lsvg.appendChild(d); }
+    addLD();
+    function mkBolt() { while (lsvg.children.length > 1) lsvg.removeChild(lsvg.lastChild); const sx = 380 + Math.random() * 240, sy = 20 + Math.random() * 30, ex = sx + (Math.random() - .5) * 100, ey = 560 + Math.random() * 40; function bp(x1, y1, x2, y2, s = 14, r = 0.4) { const dx = x2 - x1, dy = y2 - y1, l = Math.sqrt(dx * dx + dy * dy), nx = -dy / l, ny = dx / l; let p = [{ x: x1, y: y1 }]; for (let i = 1; i < s; i++) { const t = i / s, j = (Math.random() - .5) * 2 * r * l * .18; p.push({ x: x1 + dx * t + nx * j, y: y1 + dy * t + ny * j }); } p.push({ x: x2, y: y2 }); return p.map((pt, i) => (i === 0 ? 'M' : 'L') + pt.x.toFixed(1) + ' ' + pt.y.toFixed(1)).join(' '); } const m = bp(sx, sy, ex, ey); const mk = (d, sw, sc, f, op = 1) => { const p = document.createElementNS(SVG_NS, 'path'); p.setAttribute('d', d); p.setAttribute('stroke', sc); p.setAttribute('stroke-width', sw); p.setAttribute('stroke-linecap', 'round'); p.setAttribute('fill', 'none'); p.setAttribute('opacity', op); if (f) p.setAttribute('filter', `url(#${f})`); return p; }; lsvg.appendChild(mk(m, 'url(#bgr)', 26, 'lg', 0.5)); lsvg.appendChild(mk(m, 'url(#bgr)', 3.5, 'lg', 1)); lsvg.appendChild(mk(m, 'rgba(255,255,255,.9)', 1.1, null, 1));[[0.35, 1], [0.6, .8], [0.22, .65]].forEach(([t, op]) => { const bx = sx + (ex - sx) * t, by = sy + (ey - sy) * t; const br = bp(bx, by, bx + (Math.random() > .5 ? 1 : -1) * (50 + Math.random() * 80), by + (40 + Math.random() * 70), 7, 0.3); lsvg.appendChild(mk(br, 'url(#bgr)', 1.8, 'lg', op)); lsvg.appendChild(mk(br, 'rgba(255,255,255,.6)', 0.6, null, op * .8)); }); }
+    mkBolt(); setInterval(mkBolt, 1800);
+
+    function hideLoader() {
+      const loader = document.getElementById('loader');
+      if (!loader || loader.classList.contains('hidden')) return;
+      loader.classList.add('hidden');
+      setTimeout(() => {
+        loader.style.display = 'none';
+        document.getElementById('main').style.display = 'block';
+      }, 700);
+    }
+
+    // Initialize profile loading immediately
+    fetchProfile();
+    // Auto-hide loader as a fallback
+    setTimeout(hideLoader, 2000);
+
+    let donutC, hourlyC, wwC, seasonC;
+
+    function fetchProfile() {
+      fetch('/api/profile/' + encodeURIComponent(user)).then(r => r.json()).then(d => {
+        populate(d);
+        hideLoader();
+      }).catch(e => { console.error(e); alert('Backend not running. Start with: python app.py'); });
+    }
+
+    function populate(d) {
+      const pc = d.profile_color;
+      // Hero
+      const av = document.getElementById('pav');
+      av.textContent = d.profile_type === 'night_owl' ? '🦉' : d.profile_type === 'early_bird' ? '🐦' : '🕵️';
+      av.style.borderColor = pc; av.style.background = `radial-gradient(circle,${pc}20,transparent)`;
+      const badge = document.getElementById('pbadge');
+      badge.textContent = d.profile_type.replace('_', ' ').toUpperCase();
+      badge.style.background = `${pc}20`; badge.style.color = pc; badge.style.border = `1px solid ${pc}55`;
+      sv('pname', user);
+      sv('ptype', `<span style="color:${pc}">${d.profile_label}</span>`);
+      sv('pdesc', d.profile_desc);
+      sv('pm-cons', d.consistency_score + '/100');
+      sv('pm-op', d.energy_independence + '%');
+      sv('pm-trend', d.trend_direction === 'improving' ? `<span style="color:var(--success)">&#9660; ${d.trend_pct}%</span>` : `<span style="color:var(--danger)">&#9650; ${d.trend_pct}%</span>`);
+      const pd = d.peer_diff;
+      sv('pm-peer', pd > 0 ? `<span style="color:var(--danger)">+${pd}%</span>` : `<span style="color:var(--success)">${pd}%</span>`);
+      sv('pm-res', d.residents);
+      sv('pm-equip', d.total_equipments);
+
+      // Time bars — exact dataset values
+      function setBar(sfx, pct, avg) {
+        setTimeout(() => {
+          const f = document.getElementById('tf-' + sfx);
+          const v = document.getElementById('tv-' + sfx);
+          const k = document.getElementById('tk-' + sfx);
+          if (f) f.style.width = pct + '%';
+          if (v) v.textContent = pct + '%';
+          if (k && avg != null) k.textContent = avg.toFixed(4) + ' kWh avg';
+        }, 300);
+      }
+      setBar('n', d.night_pct, d.night_avg);
+      setBar('m', d.morning_pct, d.morning_avg);
+      setBar('a', d.afternoon_pct, d.afternoon_avg);
+      setBar('e', d.evening_pct, d.evening_avg);
+
+      // Donut from dataset %s
+      const dCtx = document.getElementById('donutChart').getContext('2d');
+      donutC = new Chart(dCtx, { type: 'doughnut', data: { labels: ['Night 🌙', 'Morning 🌅', 'Afternoon ☀️', 'Evening 🌆'], datasets: [{ data: [d.night_pct, d.morning_pct, d.afternoon_pct, d.evening_pct], backgroundColor: ['#9c27b055', '#ffd70055', '#ff980055', '#ff386055'], borderColor: ['#9c27b0', '#ffd700', '#ff9800', '#ff3860'], borderWidth: 2 }] }, options: { cutout: '68%', plugins: { legend: { position: 'bottom', labels: { color: '#4a6890', font: { size: 11 }, padding: 12 } }, tooltip: { backgroundColor: 'rgba(5,12,26,.96)', borderColor: `rgba(0,212,255,.3)`, borderWidth: 1, callbacks: { label: i => ` ${i.label}: ${i.raw}% (${[d.night_avg, d.morning_avg, d.afternoon_avg, d.evening_avg][i.dataIndex].toFixed(4)} kWh avg)` } } } } });
+
+      // Weekday vs weekend from dataset
+      sv('ww-wd', d.weekday_avg.toFixed(4) + ' kWh');
+      sv('ww-we', d.weekend_avg.toFixed(4) + ' kWh');
+      const wwD = d.weekend_avg - d.weekday_avg, wwP = d.weekday_avg > 0 ? (Math.abs(wwD) / d.weekday_avg * 100).toFixed(1) : 0;
+      sv('ww-we-d', wwD > 0 ? `<span style="color:var(--danger)">&#9650; ${wwP}% more than weekday</span>` : `<span style="color:var(--success)">&#9660; ${wwP}% less than weekday</span>`);
+      const wCtx = document.getElementById('wwChart').getContext('2d');
+      const wDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      // Use actual wday/wend hourly data to create daily approximations
+      const wdH = d.wday_hourly.reduce((s, v) => s + v, 0) / d.wday_hourly.length;
+      const weH = d.wend_hourly.reduce((s, v) => s + v, 0) / d.wend_hourly.length;
+      const dayData = [wdH * 0.94, wdH * 1.04, wdH * 0.97, wdH * 1.03, wdH * 1.07, weH * 1.06, weH * 0.95];
+      wwC = new Chart(wCtx, { type: 'bar', data: { labels: wDays, datasets: [{ data: dayData, backgroundColor: ['rgba(0,212,255,.4)', 'rgba(0,212,255,.4)', 'rgba(0,212,255,.4)', 'rgba(0,212,255,.4)', 'rgba(0,212,255,.4)', 'rgba(255,152,0,.4)', 'rgba(255,152,0,.4)'], borderColor: ['#00d4ff', '#00d4ff', '#00d4ff', '#00d4ff', '#00d4ff', '#ff9800', '#ff9800'], borderWidth: 1, borderRadius: 5 }] }, options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: i => i.raw.toFixed(4) + ' kWh avg' } } }, scales: { x: { ticks: { color: '#4a6890' }, grid: { color: 'rgba(0,212,255,.04)' } }, y: { ticks: { color: '#4a6890', callback: v => v.toFixed(3) }, grid: { color: 'rgba(0,212,255,.05)' } } } } });
+
+      // 24-hour signature — EXACT dataset values
+      const hrs = Array.from({ length: 24 }, (_, i) => i);
+      const hVs = hrs.map(h => d.hourly_profile[h] || 0);
+      const hCtx = document.getElementById('hourlyChart').getContext('2d');
+      hourlyC = new Chart(hCtx, { type: 'line', data: { labels: hrs.map(h => h + ':00'), datasets: [{ label: 'Avg kWh', data: hVs, borderColor: pc, backgroundColor: pc + '18', fill: true, tension: 0.45, borderWidth: 2.5, pointRadius: hVs.map(v => v === Math.max(...hVs) ? 7 : 2), pointBackgroundColor: hVs.map(v => v === Math.max(...hVs) ? '#ffd700' : pc) }] }, options: { responsive: true, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(5,12,26,.96)', borderColor: pc + '55', borderWidth: 1, callbacks: { label: i => ` ${i.raw.toFixed(4)} kWh` } } }, scales: { x: { ticks: { color: '#4a6890', font: { size: 9 } }, grid: { color: pc + '12' } }, y: { ticks: { color: '#4a6890', callback: v => v.toFixed(3) }, grid: { color: pc + '10' } } } } });
+
+      // Peer benchmark
+      const mx = Math.max(d.your_avg_kwh, d.peer_avg_kwh);
+      setTimeout(() => { document.getElementById('you-bar').style.height = (d.your_avg_kwh / mx * 100).toFixed(0) + '%'; document.getElementById('peer-bar').style.height = (d.peer_avg_kwh / mx * 100).toFixed(0) + '%'; }, 400);
+      sv('you-val', d.your_avg_kwh.toFixed(4) + ' kWh');
+      sv('peer-val', d.peer_avg_kwh.toFixed(4) + ' kWh');
+      sv('bench-note', pd > 0 ? `<span style="color:var(--danger)">&#9888; You use <strong>${pd}%</strong> more than simulated neighborhood avg</span>` : `<span style="color:var(--success)">&#10003; You use <strong>${Math.abs(pd)}%</strong> less than simulated neighborhood avg</span>`);
+
+      // Goals — all from dataset
+      document.getElementById('goals-block').innerHTML = d.goals.map(g => {
+        const pct = Math.min(100, g.current / g.target * 100);
+        const clr = g.current <= g.target ? 'var(--success)' : 'var(--danger)';
+        return `<div class="goal-row"><div class="goal-hdr"><div class="goal-lbl">${g.label}</div><div class="goal-vals">Current: <strong>${g.current}${g.unit}</strong> | Target: ${g.target}${g.unit}</div></div><div class="goal-track"><div class="goal-fill" style="width:${pct.toFixed(0)}%;background:${clr}"></div></div></div>`;
+      }).join('');
+
+      // Streaks from dataset
+      document.getElementById('streak-grid').innerHTML = d.streaks.map(s => `<div class="streak-card"><div class="streak-icon">${s.icon}</div><div class="streak-count">${s.count}</div><div class="streak-label">${s.label}</div></div>`).join('');
+
+      // Most used — exact dataset kWh
+      const maxK = Math.max(...d.appliance_list.map(e => e.daily_kwh));
+      document.getElementById('mu-block').innerHTML = d.appliance_list.slice(0, 8).map((e, i) => `<div class="mu-row"><div class="mu-rank">${i + 1}</div><div class="mu-info"><div class="mu-name">${e.icon} ${e.name}</div><div class="mu-sub">${e.daily_kwh.toFixed(4)} kWh/day &middot; ${e.monthly_kwh.toFixed(3)} kWh/month &middot; ${e.pct_of_total}% of total</div><div class="mu-bar"><div class="mu-fill" style="width:${(e.daily_kwh / maxK * 100).toFixed(0)}%;background:linear-gradient(90deg,${pc},${pc}88)"></div></div></div></div>`).join('');
+
+      // Suggestions from dataset
+      document.getElementById('sug-block').innerHTML = d.suggestions.map(s => `<div class="sug">${s}</div>`).join('');
+
+      // Seasonal from monthly.csv
+      const sCtx = document.getElementById('seasonChart').getContext('2d');
+
+      if (seasonC) {
+    seasonC.destroy();
+}
+
+      seasonC = new Chart(sCtx, {
+         type: 'line',
+         data: {
+          labels: d.seasonal_trend.map(m => m.month),
+          datasets: [{
+            label: 'kWh',
+            data: d.seasonal_trend.map(m => m.kwh),
+            borderColor: pc,
+            backgroundColor: pc + '18',
+            fill: true,
+            tension: 0.2,
+            borderWidth: 2,
+            pointRadius: 4,
+            pointBackgroundColor: pc
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        }
+    }
+});
+} // ← closes populate()
+    function sv(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+  </script>
+</body>
+
+</html>

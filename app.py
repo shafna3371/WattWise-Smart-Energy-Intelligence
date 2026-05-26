@@ -170,7 +170,49 @@ THREE_MONTH_PROJ = [round(proj_base * (1 + 0.015*i), 2) for i in range(1,4)]
 
 print(f"[Monthly] {len(m_agg)} months | Last: ₹{LAST_BILL} | Tariff: ₹{TARIFF}/kWh")
 print(f"[Monthly] Residents: {RESIDENTS} | Equipments: {TOTAL_EQUIP}")
+# --- Seasonal Monthly Dataset ---
+# ─── Seasonal Trend Processing ─────────────────────────────
 
+seasonal_path = os.path.join(BASE, 'monthly1.csv')
+seasonal = pd.read_csv(seasonal_path)
+
+print("[Seasonal] Columns:", seasonal.columns.tolist())
+
+# Normalize column names
+seasonal.columns = seasonal.columns.str.strip()
+
+# Create month labels
+seasonal['label'] = seasonal['month'].astype(str) + '-' + seasonal['year'].astype(str)
+
+# Build frontend payload
+SEASONAL_TREND = []
+
+try:
+    seasonal = pd.read_csv(seasonal_path)
+    seasonal.columns = seasonal.columns.str.strip()
+    print("[WattWise] Successfully parsed monthly1.csv for UI Trend Graph.")
+    
+    for _, row in seasonal.iterrows():
+        # Standardize single-digit months to standard two-digit strings (e.g., 1 -> "01")
+        month_int = int(row['month'])
+        month_str = f"{month_int:02d}"
+        year_str = str(int(row['year']))
+        
+        # Format label to match standard "YYYY-MM" (e.g., "2020-01")
+        frontend_label = f"{year_str}-{month_str}"
+        
+        SEASONAL_TREND.append({
+            'month': frontend_label,
+            'kwh': float(row['monthly_energy_kwh']),
+            'bill': float(row['monthly_bill_rs'])
+        })
+except Exception as e:
+    print(f"⚠️ [Graph Warning] Could not parse monthly1.csv for UI: {e}")
+    # Fallback directly to m_agg data if the new file fails to read
+    SEASONAL_TREND = [
+        {'month': str(r['month_yr']), 'bill': round(float(r['bill']),2), 'kwh': round(float(r['kwh']),2)}
+        for _, r in m_agg.iterrows()
+    ]
 # --- Model ---
 model_path = os.path.join(BASE, 'electricity_model.pkl')
 try:
@@ -314,7 +356,7 @@ def dashboard():
                 'pct_of_total': round(daily_kwh / (OVERALL_AVG * 96) * 100, 1),
             })
         equip.sort(key=lambda x: x['daily_kwh'], reverse=True)
-
+        next_month_val = round(THREE_MONTH_PROJ[0], 2) if THREE_MONTH_PROJ else round(PREDICTED_BILL, 2)
         return jsonify({
             # ── FROM DATASET ──
             'latest_kwh':           latest,
@@ -328,7 +370,8 @@ def dashboard():
             'tariff_rate':          TARIFF,
             'residents':            RESIDENTS,
             'total_equipments':     TOTAL_EQUIP,
-            'monthly_trend':        MONTHLY_TREND,
+            'monthly_trend':        SEASONAL_TREND,
+            'seasonal_trend':        SEASONAL_TREND,
             'hourly_avg':           HOURLY_AVG,
             'peak_hours':           PEAK_HOURS,
             # ── CALCULATED FROM DATASET ──
@@ -341,6 +384,7 @@ def dashboard():
             'alerts':               alerts,
             # ── MODEL PREDICTION ──
             'predicted_bill':       PREDICTED_BILL,
+            'next_month_predicted': next_month_val,
             # ── TOD graph: start from index 0, client loops itself ──
             'tod_total':            TOD_N,
         })
@@ -433,7 +477,8 @@ def user_profile(user_id):
         'trend_direction':  trend_dir,
         'trend_pct':        trend_pct,
         'your_avg_kwh':     round(OVERALL_AVG, 4),
-        'monthly_trend':    MONTHLY_TREND,
+        'seasonal_trend':    SEASONAL_TREND,
+        'monthly_trend':    SEASONAL_TREND,
         'last_month_kwh':   LAST_KWH,
         'last_month_bill':  LAST_BILL,
         'appliance_list':   appliance_list,
